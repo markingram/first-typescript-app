@@ -1,0 +1,142 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Meet The Team
+  license:
+    name: MIT
+servers:
+  - url: https://api.app.screen.cloud/meet-the-team/v1
+paths:
+  /people:
+    get:
+      summary: List all team members
+      parameters:
+        - name: appInstanceId
+          in: query
+          description: The instance ID of the app
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cursor
+          in: query
+          description: >
+            Contains base64url encoded data related to the paging scheme
+            employed. Typically this will just be copied and pasted from a the
+            response Link header. However, if supported by the API and the
+            client wants to override the default page size, they can send that
+            instruction in this parameter for the first page.
+          required: false
+          schema:
+            type: string
+            example: cGFnZV9zaXplOjEw  # base64url decodes to page_size:10
+        - name: If-None-Match
+          in: header
+          description: >
+            Opaque string serving as the ETag of the resource to enable a
+            conditional GET. This header should not be sent when paging through
+            a data set; instead, only send on _subsequent_ requests for the
+            first page to determine whether a new data should be retrieved.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            A array of people on the team. If there are many people on the team
+            then this will be bounded to a page of results, which will be
+            indicated by the presence of a Link header in the HTTP response.
+          headers:
+            X-Tracking-ID:
+              description: >
+                UUID that can be used for log collection.
+              schema:
+                type: string
+                format: uuid
+            Link:
+              description: >
+                Comma-delimited list of web links allowing the client to navigate
+                from the current context, e.g. to the next page. See RFC8288 for
+                examples.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  people:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Person'
+        '304':
+          description: >
+            If the client has performed a conditional GET and the state on the
+            server side has not changed then this response status code will be
+            returned indicating that the client already has seen the most
+            current state.
+        '400':
+          description: >
+            An issue was detected with the submitted request. More information
+            is available in the response body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          description: >
+            Unsuccessful authentication - the API key is wrong or the request is
+            not signed correctly.
+        '403':
+          description: >
+            Unsuccessful authorisation - the operation attempted is not
+            authorised.
+        '404':
+          description: >
+            This App is not configured for the supplied appInstanceId.
+        '500':
+          description: >
+            Something went wrong on the server-side. Use the exception message
+            in the response payload and the Correlation ID in the response
+            header to aid in issue triage.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        display_name:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        nationality:
+          type: string
+        date_of_birth:
+          type: string
+        location:
+          type: string
+        department:
+          type: string
+        job_title:
+          type: string
+        start_date:
+          type: string
+          format: date
+        picture_url:
+          type: string
+          format: url
+        bio:
+          type: string
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+      example:
+        message: The cursor value supplied is corrupt.
