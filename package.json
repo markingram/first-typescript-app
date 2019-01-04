@@ -2,6 +2,10 @@
   "author": "ScreenCloud",
   "description": "New Hires HR App",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/markingram/first-typescript-app"
+  },
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "test:local": "npm run build && lambda-local --function dist/index.js --event tests/resources/googleSheetsEventPage2.json --timeout 30"
